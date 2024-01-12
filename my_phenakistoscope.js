@@ -1,7 +1,16 @@
 const SLICE_COUNT = 18;
-const imageName = 'assets/ghost';
-let img1, img2, img3, img4; 
+const imageName = 'assets/frame';
+// let img1, img2, img3, img4; 
+let img = []; 
+let back; 
+let popImage; 
 var frame = 0; 
+
+var balframe = 1;
+
+var ballsize = 6; 
+var ballX = -50; 
+var ballY = 24; 
 
 function setup_pScope(pScope){
   pScope.output_mode(OUTPUT_GIF(1000));
@@ -12,57 +21,101 @@ function setup_pScope(pScope){
 }
 
 function setup_layers(pScope){
+  //load images of ghost
+  for(let i = 0; i < SLICE_COUNT; i++)
+  {
+    img[i] = loadImage(imageName + (i+ 1) + '.png');
+  }
+  back = loadImage('assets/background.jpeg');
+  popImage = loadImage('assets/pop.png');
 
-  img1 = loadImage(imageName + '1.png');
-  img2 = loadImage(imageName + '2.png');
-  img3 = loadImage(imageName + '3.png');
-  img4 = loadImage(imageName + '4.png');
   new PLayer(null, 220);  //lets us draw the whole circle background, ignoring the boundaries
 
-  var layer1 = new PLayer(faces);
-  layer1.mode( RING);
-  layer1.set_boundary( 200, 1000 );
-
-  var layer2 = new PLayer(squares);
+  var layer2 = new PLayer(ghost);
   layer2.mode( RING );
   layer2.set_boundary( 0, 400 );
 
+  var layer1 = new PLayer(balloon);
+  layer1.mode( RING);
+  layer1.set_boundary( 0, 800 );
 }
 
-function faces(x, y, animation, pScope){
+function balloon(x, y, animation, pScope){
+  stroke(0,0,0);
+  let red = Math.floor(Math.random() * 15);  //adds a bit of randomness to the color
+
+  fill(205 - red, 96,84); 
+  balframe++;
+  fFrame = balframe - 5;  //what frame will it be shown on
+  if(fFrame < 0)
+  {
+    fFrame = SLICE_COUNT + fFrame; 
+  }
+
+  //if the balloon is at the top of the screen, it will stop moving
+  if(fFrame < 4)
+  {
+    fFrame = 17; 
+  }
+
+  //calculations for triangle
+  var size = ballsize * fFrame * 0.25; 
+  var centerY = (ballY * fFrame) - size;
+  var centerX = (ballX * fFrame) + size; 
+
+
+  //line for balloon
+  stroke(0,0,0);
+  line(centerX, centerY, centerX + size * 3, centerY - size * 2.5);
+
+  //triangle at bottom
+  beginShape();
+  vertex(centerX + size, centerY + size);
+  vertex(centerX + size, centerY - size);
+  vertex(centerX - size, centerY - size);
+  vertex(centerX - size, centerY + size);
+  endShape(CLOSE);
+
+  //balloon circle
+  ellipse(ballX * fFrame, ballY * fFrame, ballsize * fFrame, ballsize * fFrame); 
+
+
+  stroke(205 - red, 96, 84);
+
+  //triangle at bottom, overlaps top line
+  size = size * 0.9; 
+  beginShape();
+  vertex(centerX + size, centerY + size);
+  vertex(centerX + size, centerY - size );
+  vertex(centerX - size , centerY - size);
+  vertex(centerX - size, centerY + size);
+  endShape(CLOSE);
+
+
+
+  //ellipse(centerX, centerY, ballsize * fFrame, ballsize * fFrame); // draw head
+
+  if(balframe == SLICE_COUNT)
+  {
+    balframe = 0; 
+  }
   
-  scale(animation.frame*2);
+  noFill();
 
-  fill(255,0,0); 
-  ellipse(0,0,50,50); // draw head
-  rect(-5,20,10,15);
-  curve(10,30,10,40,-10,50,10,60); // draw mouth
 
 }
 
-function squares(x, y, animation, pScope){
-
-  // this is how you set up a background for a specific layer
-  let angleOffset = (360 / SLICE_COUNT) / 2
-  let backgroundArcStart = 270 - angleOffset;
-  let backgroundArcEnd = 270 + angleOffset;
-
+function ghost(x, y, animation, pScope){
   fill(66, 135, 245)
-  arc(x,y,800,800,backgroundArcStart,backgroundArcEnd); // draws "pizza slice" in the background
+  fill(255, 0 ,0 );
+  if(frame == 0)
+  {
+     image(back, 0, 0); //draws background
+  }
+  image(img[frame], 22, -800); // draw ghost
 
-  fill(255)
-  rect(-10,-300-animation.wave()*50,20,20) // .wave is a cosine wave btw
-  if(frame < 4){
-    image(img1, 0, -800); // draw eyes
-  }
-  else if(frame < 8){
-    image(img2, 0, -800); // draw eyes
-  }
-  else if(frame < 12){
-    image(img3, 0, -800); // draw eyes
-  }
-  else{
-    image(img4, 0, -800); // draw eyes
+  if(frame == 1){
+    image(popImage, 75, -900);
   }
 
   frame++; 
